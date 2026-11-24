@@ -198,6 +198,23 @@ Build this API with `--features fst-engine`. It uses the same compiled NeMo
 classifier and verbalizer as `fst::<lang>::normalize`, rather than recovering
 alignment by diffing the final strings.
 
+### Python
+
+Install from the repository root with a Rust toolchain and Python 3.9 or newer.
+The Maturin build enables the `python` feature and uses the rule-based engine
+by default.
+
+```sh
+python -m pip install .
+```
+
+```python
+from text_processing_rs import normalize_sentence_lang
+
+assert normalize_sentence_lang("I have twenty one apples") == "I have 21 apples"
+assert normalize_sentence_lang("मेरे पास पच्चीस किताबें हैं।", lang="hi") == "मेरे पास २५ किताबें हैं।"
+```
+
 ### Swift
 
 ```swift

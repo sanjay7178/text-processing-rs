@@ -26,6 +26,8 @@ pub mod fst;
 
 #[cfg(feature = "ffi")]
 pub mod ffi;
+#[cfg(all(feature = "python", not(target_family = "wasm")))]
+mod python;
 #[cfg(all(target_arch = "wasm32", feature = "wasm"))]
 pub mod wasm;
 

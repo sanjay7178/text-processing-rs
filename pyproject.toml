@@ -1,0 +1,14 @@
+[build-system]
+requires = ["maturin>=1.9.4,<2"]
+build-backend = "maturin"
+
+[project]
+name = "text-processing-rs"
+requires-python = ">=3.9"
+readme = "README.md"
+dynamic = ["version", "description", "license"]
+
+[tool.maturin]
+bindings = "pyo3"
+features = ["python"]
+module-name = "text_processing_rs"

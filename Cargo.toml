@@ -27,12 +27,16 @@ flate2 = { version = "1", optional = true }
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 getrandom = { version = "0.3.4", optional = true }
 
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+pyo3 = { version = "0.30.1", optional = true }
+
 [dev-dependencies]
 proptest = "1"
 
 [features]
 default = []
 ffi = []  # Enable C FFI bindings
+python = ["dep:pyo3"]
 wasm = ["dep:wasm-bindgen", "dep:js-sys", "dep:console_error_panic_hook", "getrandom?/wasm_js"]
 # Byte-exact NeMo parity engine (runs NeMo's compiled grammars via rustfst).
 # Adds rustfst + flate2 and ~8 MB of gzipped grammars (all languages combined).
