@@ -226,6 +226,46 @@ assert tn_normalize_sentence_lang("I paid $5 for 23 items") == (
 `normalize_sentence_lang` is also available in Python as a compatibility alias
 for `itn_normalize_sentence_lang`.
 
+#### Build and release the Python package
+
+With GNU Make, Rust, and Python 3.9 or newer with `venv` and `pip` available,
+run these commands from the repository root.
+
+```sh
+make build    # Build a wheel and source archive in target/python-dist
+make check    # Validate both distribution formats
+make install  # Install the bindings into target/python-venv
+make run      # Run an ITN and a TN example
+make test     # Run Rust tests and check the installed Python bindings
+```
+
+Preview the next version with `make next-version`. The preview uses the latest
+stable version tag in `RELEASE_REPO` and suggests a patch bump when
+there are committed or working-tree changes. Use `make next-version BUMP=minor`
+for compatible API additions or `make next-version BUMP=major` for breaking
+changes. The preview recognizes legacy `python-v` tags as version baselines.
+The first release defaults to the Cargo package version. Commit messages can
+be written in any format.
+
+Set the chosen version in `Cargo.toml` and refresh `Cargo.lock` before publishing.
+
+Authenticate GitHub CLI and push the commit containing the release workflow to
+the release repository. `make release` publishes that commit as a GitHub release
+on `sanjay7178/text-processing-rs` by default. Set `RELEASE_REPO` to use another
+repository. The default tag is the Cargo package version with a `v` prefix,
+such as `v0.3.4`. Set `RELEASE_TAG` to specify a tag for that package version.
+
+`make release-dry-run` prints the repository, Cargo package version, tag, and
+target commit, then runs the release tag and workflow checks.
+
+```sh
+make release-dry-run
+make release
+```
+
+Publishing a release with a `v` tag triggers GitHub Actions to build, test, and
+attach Linux, macOS, and Windows wheels and a source archive to the release.
+
 ### Swift
 
 ```swift
