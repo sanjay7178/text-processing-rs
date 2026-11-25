@@ -43,9 +43,9 @@ runs NeMo's own compiled grammars, so its output is NeMo's:
   applies after TN (`January 5 , 2024 .` → `January 5, 2024.`).
 - Custom rules apply ahead of NeMo's grammars.
 
-The Swift XCFramework and the npm package are built with `fst-engine`. A crate
-build without it, the ITN options NeMo doesn't have (`concat_compound_numbers`,
-`disable_bare_second`, `small_numbers_as_words`) and
+The Swift XCFramework, npm package, and Python package are built with
+`fst-engine`. A crate build without it, the ITN options NeMo doesn't have
+(`concat_compound_numbers`, `disable_bare_second`, `small_numbers_as_words`) and
 `set_rule_based_engine(true)` (Swift `setRuleBasedEngine`, WASM
 `setRuleBasedEngine`, C `nemo_set_rule_based_engine`) use the rule-based taggers
 instead. The grammars add about 12 MB to the binary (the npm WASM grows from 1.1
@@ -201,8 +201,8 @@ alignment by diffing the final strings.
 ### Python
 
 Install from the repository root with a Rust toolchain and Python 3.9 or newer.
-The Maturin build enables the `python` feature and uses the rule-based engine
-by default.
+The Maturin build enables `fst-engine`, so both Python normalization functions
+use the compiled NeMo grammars by default.
 
 ```sh
 python -m pip install .
@@ -213,9 +213,7 @@ from text_processing_rs import itn_normalize_sentence_lang, tn_normalize_sentenc
 
 # Inverse text normalization (ITN)
 assert itn_normalize_sentence_lang("I have twenty one apples") == "I have 21 apples"
-assert itn_normalize_sentence_lang("मेरे पास पच्चीस किताबें हैं।", lang="hi") == (
-    "मेरे पास २५ किताबें हैं।"
-)
+assert itn_normalize_sentence_lang("बीस रुपये", lang="hi") == "₹२०"
 
 # Text normalization (TN)
 assert tn_normalize_sentence_lang("I paid $5 for 23 items") == (
