@@ -56,7 +56,7 @@ jobs:
           python -I scripts/check-python-wheel.py
       - uses: actions/upload-artifact@v4
         with:
-          name: python-${{ matrix.target }}
+          name: dist-${{ matrix.target }}
           path: dist/
           if-no-files-found: error
 
@@ -68,7 +68,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: python-*
+          pattern: dist-*
           merge-multiple: true
           path: dist
       - name: Attach distributions to the release
@@ -77,7 +77,8 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
           RELEASE_ID: ${{ github.event.release.id }}
         run: |
-          uploaded=$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate +            --jq '.[] | select(.state == "uploaded") | .name')
+          uploaded=$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate \
+            --jq '.[] | select(.state == "uploaded") | .name')
           for file in dist/*.whl dist/*.tar.gz; do
             name=${file##*/}
             if grep -Fxq -- "$name" <<< "$uploaded"; then
@@ -86,3 +87,23 @@ jobs:
               gh release upload "$RELEASE_TAG" "$file" --repo "$GITHUB_REPOSITORY"
             fi
           done
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: attach
+    runs-on: ubuntu-24.04
+    environment:
+      name: pypi
+      url: https://pypi.org/project/text-processing-rs/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          packages-dir: dist
+          skip-existing: true

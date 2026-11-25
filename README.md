@@ -265,6 +265,22 @@ make release
 
 Publishing a release with a `v` tag triggers GitHub Actions to build, test, and
 attach Linux, macOS, and Windows wheels and a source archive to the release.
+The workflow then publishes those same files to PyPI through Trusted
+Publishing.
+
+Before the first PyPI release, add a
+[pending Trusted Publisher](https://pypi.org/manage/account/publishing/) with
+these settings.
+
+| Field | Value |
+| --- | --- |
+| PyPI project name | `text-processing-rs` |
+| GitHub owner | `sanjay7178` |
+| GitHub repository | `text-processing-rs` |
+| Workflow name | `python-release.yml` |
+| Environment | `pypi` |
+
+Once the package is on PyPI, install it with `python -m pip install text-processing-rs`.
 
 ### Swift
 
