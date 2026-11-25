@@ -268,6 +268,19 @@ attach Linux, macOS, and Windows wheels and a source archive to the release.
 The workflow then publishes those same files to PyPI through Trusted
 Publishing.
 
+The macOS job builds one universal2 wheel on an Intel runner. It tests the
+installed wheel and verifies that the extension includes both Intel and
+Apple Silicon binaries.
+
+To recover a stalled run, cancel it in GitHub Actions and push the workflow
+commit to a branch named `release-recovery/<tag>`. The new run builds the
+existing release's tagged commit and uploads the distributions to that
+release and PyPI.
+
+```sh
+git push https://github.com/sanjay7178/text-processing-rs.git HEAD:refs/heads/release-recovery/v0.3.4
+```
+
 Before the first PyPI release, add a
 [pending Trusted Publisher](https://pypi.org/manage/account/publishing/) with
 these settings.
