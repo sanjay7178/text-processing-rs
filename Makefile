@@ -14,6 +14,8 @@ else
 VENV_PYTHON := $(VENV)/bin/python
 endif
 
+PYTHON_WHEEL_FEATURES := python,pyo3/abi3-py39
+
 export RELEASE_REPO RELEASE_TAG BUMP
 
 .PHONY: setup build check install run test next-version release release-dry-run
@@ -27,13 +29,14 @@ $(VENV)/.build-tools: Makefile pyproject.toml
 
 build: setup
 	"$(VENV_PYTHON)" -m maturin build --locked --release --sdist --compatibility pypi \
-		--interpreter "$(VENV_PYTHON)" --out "$(DIST_DIR)"
+		--features "$(PYTHON_WHEEL_FEATURES)" --interpreter "$(VENV_PYTHON)" --out "$(DIST_DIR)"
 
 check: build
 	"$(VENV_PYTHON)" -m twine check --strict "$(DIST_DIR)"/*.whl "$(DIST_DIR)"/*.tar.gz
 
 install: setup
-	VIRTUAL_ENV="$(abspath $(VENV))" "$(VENV_PYTHON)" -m maturin develop --locked --release
+	VIRTUAL_ENV="$(abspath $(VENV))" "$(VENV_PYTHON)" -m maturin develop --locked --release \
+		--features "$(PYTHON_WHEEL_FEATURES)"
 
 run: install
 	"$(VENV_PYTHON)" -c 'from text_processing_rs import itn_normalize_sentence_lang; print(itn_normalize_sentence_lang("I have twenty one apples"))'
