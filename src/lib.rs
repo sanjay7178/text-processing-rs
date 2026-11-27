@@ -1819,6 +1819,11 @@ pub fn tn_normalize_sentence_lang(input: &str, lang: &str) -> String {
     tn_normalize_sentence_with_max_span_lang(input, lang, DEFAULT_MAX_SPAN_TOKENS)
 }
 
+/// Rule-based sentence TN for bindings that expose per-call engine selection.
+pub(crate) fn tn_normalize_sentence_lang_rule_based(input: &str, lang: &str) -> String {
+    tn_normalize_sentence_with_max_span_lang_rule_based(input, lang, DEFAULT_MAX_SPAN_TOKENS)
+}
+
 /// Normalize a full sentence (TN) for a specific language with caller options.
 ///
 /// Honors [`NormalizeOptions::max_span_tokens`] and
@@ -1870,8 +1875,16 @@ pub fn tn_normalize_sentence_with_max_span_lang(
     if let Some(result) = nemo_tn(input, lang) {
         return result;
     }
+    tn_normalize_sentence_with_max_span_lang_rule_based(input, lang, max_span_tokens)
+}
+
+fn tn_normalize_sentence_with_max_span_lang_rule_based(
+    input: &str,
+    lang: &str,
+    max_span_tokens: usize,
+) -> String {
     match lang {
-        "en" | "" => tn_normalize_sentence_with_max_span(input, max_span_tokens),
+        "en" | "" => tn_normalize_sentence_with_max_span_rule_based(input, max_span_tokens),
         _ => {
             let trimmed = input.trim();
             if trimmed.is_empty() {
@@ -1892,6 +1905,13 @@ pub fn tn_normalize_sentence_with_max_span(input: &str, max_span_tokens: usize) 
     if let Some(result) = nemo_tn(input, "en") {
         return result;
     }
+    tn_normalize_sentence_with_max_span_rule_based(input, max_span_tokens)
+}
+
+fn tn_normalize_sentence_with_max_span_rule_based(
+    input: &str,
+    max_span_tokens: usize,
+) -> String {
     let trimmed = input.trim();
     if trimmed.is_empty() {
         return trimmed.to_string();

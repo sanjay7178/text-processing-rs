@@ -15,11 +15,22 @@ mod text_processing_rs {
 
     /// Convert a written sentence to spoken form using text normalization (TN).
     ///
-    /// Language support follows the active Rust text normalization engine.
+    /// Set `use_fst` to `False` to use the rule-based engine for this call.
     #[pyfunction]
-    #[pyo3(signature = (text, lang = "en"))]
-    fn tn_normalize_sentence_lang(py: Python<'_>, text: &str, lang: &str) -> String {
-        py.detach(|| crate::tn_normalize_sentence_lang(text, lang))
+    #[pyo3(signature = (text, lang = "en", use_fst = true))]
+    fn tn_normalize_sentence_lang(
+        py: Python<'_>,
+        text: &str,
+        lang: &str,
+        use_fst: bool,
+    ) -> String {
+        py.detach(|| {
+            if use_fst {
+                crate::tn_normalize_sentence_lang(text, lang)
+            } else {
+                crate::tn_normalize_sentence_lang_rule_based(text, lang)
+            }
+        })
     }
 
     #[pymodule_init]
