@@ -7,8 +7,9 @@ name = "text-processing-rs"
 requires-python = ">=3.9"
 readme = "README.md"
 dynamic = ["version", "description", "license"]
+license-files = ["LICENSE", "NOTICE", "THIRD-PARTY-LICENSES.md"]
 
 [tool.maturin]
 bindings = "pyo3"
-features = ["python"]
+features = ["python", "fst-engine", "pyo3/abi3-py39"]
 module-name = "text_processing_rs"

@@ -60,11 +60,15 @@ pub fn rule_based_engine() -> bool {
 
 /// NeMo ITN for `lang` (other codes read as English, as on the rule-based
 /// path), or `None` to use the rule-based taggers.
-#[cfg(feature = "fst-engine")]
 fn nemo_itn(input: &str, lang: &str) -> Option<String> {
-    if rule_based_engine() {
+    if !cfg!(feature = "fst-engine") || rule_based_engine() {
         return None;
     }
+    fst_itn(input, lang)
+}
+
+#[cfg(feature = "fst-engine")]
+fn fst_itn(input: &str, lang: &str) -> Option<String> {
     // A rule for the whole input is the answer, as on the rule-based path.
     if let Some(written) = custom_rules::parse(input) {
         return Some(written);
@@ -79,17 +83,21 @@ fn nemo_itn(input: &str, lang: &str) -> Option<String> {
 }
 
 #[cfg(not(feature = "fst-engine"))]
-fn nemo_itn(_input: &str, _lang: &str) -> Option<String> {
+fn fst_itn(_input: &str, _lang: &str) -> Option<String> {
     None
 }
 
 /// NeMo TN for `lang` (other codes read as English), or `None` to use the
 /// rule-based taggers.
-#[cfg(feature = "fst-engine")]
 fn nemo_tn(input: &str, lang: &str) -> Option<String> {
-    if rule_based_engine() {
+    if !cfg!(feature = "fst-engine") || rule_based_engine() {
         return None;
     }
+    fst_tn(input, lang)
+}
+
+#[cfg(feature = "fst-engine")]
+fn fst_tn(input: &str, lang: &str) -> Option<String> {
     let lang = match lang {
         "de" | "es" | "fr" | "hi" | "it" | "ja" | "zh" => lang,
         _ => "en",
@@ -98,7 +106,7 @@ fn nemo_tn(input: &str, lang: &str) -> Option<String> {
 }
 
 #[cfg(not(feature = "fst-engine"))]
-fn nemo_tn(_input: &str, _lang: &str) -> Option<String> {
+fn fst_tn(_input: &str, _lang: &str) -> Option<String> {
     None
 }
 
@@ -985,9 +993,6 @@ fn tn_parse_span_lang(span: &str, lang: &str) -> Option<(String, u8)> {
     }
 
     match lang {
-        "en" => {
-            try_lang_taggers!(tn::en);
-        }
         "fr" => {
             try_lang_taggers!(tn::fr);
         }
@@ -1232,10 +1237,16 @@ pub fn normalize_sentence_with_max_span_lang(
     if let Some(result) = nemo_itn(input, lang) {
         return result;
     }
+    rule_based_itn_sentence(input, lang, max_span_tokens)
+}
+
+fn rule_based_itn_sentence(input: &str, lang: &str, max_span_tokens: usize) -> String {
     match lang {
         // Scanning-based ITN: processors already replace spans across the whole
         // sentence in place, so the sliding window is unnecessary.
-        "hi" | "ja" | "zh" => normalize_with_lang(input, lang),
+        "hi" => normalize_lang_hi(input.trim()),
+        "ja" => normalize_lang_ja(input.trim()),
+        "zh" => normalize_lang_zh(input.trim()),
         // Expression-level taggers: scan the sentence span by span.
         "fr" | "de" | "es" => {
             let trimmed = input.trim();
@@ -1870,28 +1881,15 @@ pub fn tn_normalize_sentence_with_max_span_lang(
     if let Some(result) = nemo_tn(input, lang) {
         return result;
     }
-    match lang {
-        "en" | "" => tn_normalize_sentence_with_max_span(input, max_span_tokens),
-        _ => {
-            let trimmed = input.trim();
-            if trimmed.is_empty() {
-                return trimmed.to_string();
-            }
-
-            let unified = unify_tn_quotes(trimmed);
-            let pretokens = pretokenize(&unified);
-            sentence_loop(&pretokens, max_span_tokens, None, |span| {
-                tn_parse_span_lang(span, lang)
-            })
-        }
-    }
+    rule_based_tn_sentence(input, lang, max_span_tokens)
 }
 
 /// Normalize a full sentence (TN) with a configurable max span size.
 pub fn tn_normalize_sentence_with_max_span(input: &str, max_span_tokens: usize) -> String {
-    if let Some(result) = nemo_tn(input, "en") {
-        return result;
-    }
+    tn_normalize_sentence_with_max_span_lang(input, "en", max_span_tokens)
+}
+
+fn rule_based_tn_sentence(input: &str, lang: &str, max_span_tokens: usize) -> String {
     let trimmed = input.trim();
     if trimmed.is_empty() {
         return trimmed.to_string();
@@ -1899,7 +1897,9 @@ pub fn tn_normalize_sentence_with_max_span(input: &str, max_span_tokens: usize) 
 
     let unified = unify_tn_quotes(trimmed);
     let pretokens = pretokenize(&unified);
-    sentence_loop(&pretokens, max_span_tokens, None, tn_parse_span)
+    sentence_loop(&pretokens, max_span_tokens, None, |span| {
+        tn_parse_span_lang(span, lang)
+    })
 }
 
 // Rule-based output; with `fst-engine` the entry points run NeMo's grammars.
