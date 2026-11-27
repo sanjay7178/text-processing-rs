@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   xcframework:
+    if: github.event_name != 'push' || github.repository == 'FluidInference/text-processing-rs'
     name: Build & publish xcframework
     runs-on: macos-latest
     steps:
