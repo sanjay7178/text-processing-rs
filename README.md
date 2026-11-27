@@ -32,8 +32,8 @@ Converts written-form text to spoken form (useful for TTS preprocessing):
 
 ## Engines
 
-With the `fst-engine` feature, every `normalize*` and `tn_normalize*` entry point
-runs NeMo's own compiled grammars, so its output is NeMo's:
+With the `fst-engine` feature, the Rust `normalize*` and `tn_normalize*` entry
+points run NeMo's compiled grammars.
 
 - **TN** matches `Normalizer(lang, deterministic=True)` byte for byte in en, de,
   es, fr, hi, it, ja and zh.
@@ -43,8 +43,9 @@ runs NeMo's own compiled grammars, so its output is NeMo's:
   applies after TN (`January 5 , 2024 .` → `January 5, 2024.`).
 - Custom rules apply ahead of NeMo's grammars.
 
-The Swift XCFramework and the npm package are built with `fst-engine`. A crate
-build without it, the ITN options NeMo doesn't have (`concat_compound_numbers`,
+The Swift XCFramework and the npm package are built with `fst-engine`. Python
+wheels include the same grammars and enable them per call with `use_fst_engine=True`.
+A crate build without it, the ITN options NeMo doesn't have (`concat_compound_numbers`,
 `disable_bare_second`, `small_numbers_as_words`) and
 `set_rule_based_engine(true)` (Swift `setRuleBasedEngine`, WASM
 `setRuleBasedEngine`, C `nemo_set_rule_based_engine`) use the rule-based taggers
@@ -201,8 +202,8 @@ alignment by diffing the final strings.
 ### Python
 
 Install from the repository root with a Rust toolchain and Python 3.9 or newer.
-The Maturin build enables the `python` feature and uses the rule-based engine
-by default.
+Both Python functions use the rule-based taggers by default. Pass
+`use_fst_engine=True` to use the compiled NeMo grammar for that call.
 
 ```sh
 python -m pip install .
@@ -221,10 +222,16 @@ assert itn_normalize_sentence_lang("मेरे पास पच्चीस �
 assert tn_normalize_sentence_lang("I paid $5 for 23 items") == (
     "I paid five dollars for twenty three items"
 )
+
+assert itn_normalize_sentence_lang(
+    "Call me at five five five one two three four five six seven.", use_fst_engine=True
+) == "Call me at 555-123-4567."
+assert tn_normalize_sentence_lang("123", lang="it", use_fst_engine=True) == "cento ventitre"
 ```
 
 `normalize_sentence_lang` is also available in Python as a compatibility alias
-for `itn_normalize_sentence_lang`.
+for `itn_normalize_sentence_lang`. A custom extension built without the
+`fst-engine` Cargo feature raises `RuntimeError` when passed `use_fst_engine=True`.
 
 #### Build and release the Python package
 

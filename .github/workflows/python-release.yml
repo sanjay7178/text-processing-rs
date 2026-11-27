@@ -78,8 +78,7 @@ jobs:
           manylinux: ${{ matrix.manylinux }}
           maturin-version: v1.16.0
           args: >-
-            --locked --release --compatibility pypi --out dist
-            --features python,pyo3/abi3-py39 ${{ matrix.sdist }}
+            --locked --release --compatibility pypi --out dist ${{ matrix.sdist }}
       - name: Test installed wheel
         shell: bash
         run: |
