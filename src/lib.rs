@@ -1213,6 +1213,11 @@ pub fn normalize_sentence_lang(input: &str, lang: &str) -> String {
     normalize_sentence_with_max_span_lang(input, lang, DEFAULT_MAX_SPAN_TOKENS)
 }
 
+/// Rule-based sentence ITN for bindings that expose per-call engine selection.
+pub(crate) fn normalize_sentence_lang_rule_based(input: &str, lang: &str) -> String {
+    normalize_sentence_with_max_span_lang_rule_based(input, lang, DEFAULT_MAX_SPAN_TOKENS)
+}
+
 /// Normalize a full sentence (ITN) for a specific language with a configurable
 /// max span size.
 ///
@@ -1232,10 +1237,21 @@ pub fn normalize_sentence_with_max_span_lang(
     if let Some(result) = nemo_itn(input, lang) {
         return result;
     }
+    normalize_sentence_with_max_span_lang_rule_based(input, lang, max_span_tokens)
+}
+
+fn normalize_sentence_with_max_span_lang_rule_based(
+    input: &str,
+    lang: &str,
+    max_span_tokens: usize,
+) -> String {
     match lang {
         // Scanning-based ITN: processors already replace spans across the whole
-        // sentence in place, so the sliding window is unnecessary.
-        "hi" | "ja" | "zh" => normalize_with_lang(input, lang),
+        // sentence in place, so the sliding window is unnecessary. Call them
+        // directly so this path does not re-enter the FST engine.
+        "hi" => normalize_lang_hi(input.trim()),
+        "ja" => normalize_lang_ja(input.trim()),
+        "zh" => normalize_lang_zh(input.trim()),
         // Expression-level taggers: scan the sentence span by span.
         "fr" | "de" | "es" => {
             let trimmed = input.trim();
